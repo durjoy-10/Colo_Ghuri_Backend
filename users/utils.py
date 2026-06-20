@@ -18,6 +18,10 @@ def generate_password_reset_token():
     return secrets.token_urlsafe(32)
 
 
+def get_frontend_url():
+    return getattr(settings, "FRONTEND_URL", os.environ.get("FRONTEND_URL", "http://localhost:5173")).rstrip("/")
+
+
 def parse_sender(default_from_email):
     default_from_email = (default_from_email or "").strip()
 
@@ -75,8 +79,54 @@ def send_mailtrap_email(to_email, subject, html_content, text_content=""):
     return response.json()
 
 
+def send_google_script_email(to_email, subject, html_content, text_content=""):
+    script_url = os.environ.get("GOOGLE_SCRIPT_EMAIL_URL", "").strip()
+    script_secret = os.environ.get("GOOGLE_SCRIPT_SECRET", "").strip()
+
+    if not script_url:
+        raise Exception("GOOGLE_SCRIPT_EMAIL_URL is not configured.")
+
+    if not script_secret:
+        raise Exception("GOOGLE_SCRIPT_SECRET is not configured.")
+
+    payload = {
+        "secret": script_secret,
+        "to": to_email,
+        "subject": subject,
+        "text": text_content or subject,
+        "html": html_content,
+    }
+
+    response = requests.post(
+        script_url,
+        json=payload,
+        timeout=int(os.environ.get("EMAIL_TIMEOUT", 10)),
+    )
+
+    if response.status_code >= 400:
+        raise Exception(
+            f"Google Script email failed: {response.status_code} {response.text}"
+        )
+
+    result = response.json()
+
+    if not result.get("success"):
+        raise Exception(f"Google Script email failed: {result}")
+
+    return result
+
+
 def send_project_email(to_email, subject, plain_message, html_message):
     email_backend = os.environ.get("EMAIL_BACKEND", "").lower().strip()
+
+    if email_backend == "google_apps_script":
+        send_google_script_email(
+            to_email=to_email,
+            subject=subject,
+            html_content=html_message,
+            text_content=plain_message,
+        )
+        return True
 
     if email_backend == "mailtrap":
         send_mailtrap_email(
@@ -104,11 +154,12 @@ def send_verification_email(user, request=None):
     user.email_verification_sent_at = timezone.now()
     user.save()
 
-    verification_url = f"{settings.FRONTEND_URL}/verify-email/{token}"
+    frontend_url = get_frontend_url()
+    verification_url = f"{frontend_url}/verify-email/{token}"
 
     print("\n=== VERIFICATION EMAIL DEBUG ===")
     print(f"To: {user.email}")
-    print(f"From: {settings.DEFAULT_FROM_EMAIL}")
+    print(f"From: {getattr(settings, 'DEFAULT_FROM_EMAIL', '')}")
     print(f"Verification link: {verification_url}")
     print("================================\n")
 
@@ -180,7 +231,13 @@ def send_password_reset_email(user, request=None):
     user.password_reset_sent_at = timezone.now()
     user.save()
 
-    reset_url = f"{settings.FRONTEND_URL}/reset-password/{token}"
+    frontend_url = get_frontend_url()
+    reset_url = f"{frontend_url}/reset-password/{token}"
+
+    print("\n=== PASSWORD RESET EMAIL DEBUG ===")
+    print(f"To: {user.email}")
+    print(f"Reset link: {reset_url}")
+    print("==================================\n")
 
     context = {
         "user": user,
@@ -247,7 +304,13 @@ Colo Ghuri Team
 
 
 def send_welcome_email(user, request=None):
-    login_url = f"{settings.FRONTEND_URL}/login"
+    frontend_url = get_frontend_url()
+    login_url = f"{frontend_url}/login"
+
+    print("\n=== WELCOME EMAIL DEBUG ===")
+    print(f"To: {user.email}")
+    print(f"Login link: {login_url}")
+    print("===========================\n")
 
     context = {
         "user": user,
