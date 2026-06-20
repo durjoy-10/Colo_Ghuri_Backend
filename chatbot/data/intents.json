@@ -1,0 +1,373 @@
+{
+  "intents": [
+    {
+      "intent": "greeting",
+      "patterns": [
+        "hi", "hello", "hey", "salam", "assalamualaikum", "good morning", "good evening",
+        "হ্যালো", "হাই", "সালাম", "কেমন আছো", "chatbot start", "start chat"
+      ]
+    },
+    {
+      "intent": "help",
+      "patterns": [
+        "help", "what can you do", "commands", "how can you help me",
+        "ki korte paro", "ki ki help korte parba", "তুমি কি করতে পারো",
+        "আমাকে সাহায্য করো", "help me with colo ghuri", "site use korbo kivabe"
+      ]
+    },
+    {
+      "intent": "registration_help",
+      "patterns": [
+        "how to register", "create account", "account khulbo kivabe", "register korte chai",
+        "traveller registration", "guide registration", "guide hote chai", "guide account korbo",
+        "কিভাবে account খুলবো", "কিভাবে guide হবো", "sign up process", "registration process"
+      ]
+    },
+    {
+      "intent": "login_help",
+      "patterns": [
+        "login korte parchi na", "login problem", "forgot password", "password vule gechi",
+        "account e dhukte parchi na", "email verify hoy nai", "login help", "sign in problem",
+        "লগইন করতে পারছি না", "password reset"
+      ]
+    },
+    {
+      "intent": "payment_methods",
+      "patterns": [
+        "payment method", "how to pay", "payment kivabe korbo", "bkash ache", "nagad ache",
+        "cash payment", "manual payment", "payment system", "কিভাবে payment করবো",
+        "payment proof upload", "transaction id kothay dibo"
+      ]
+    },
+    {
+      "intent": "contact_support",
+      "patterns": [
+        "contact support", "contact admin", "send message to admin", "admin ke message pathabo",
+        "support chai", "problem report korte chai", "contact us", "help from admin",
+        "সমস্যা জানাতে চাই", "admin er sathe kotha bolbo"
+      ]
+    },
+    {
+      "intent": "show_destinations",
+      "patterns": [
+        "show destinations", "all destinations", "destination list", "where can i travel",
+        "ghurar jayga dekhao", "destination dekhao", "tourist places", "ভ্রমণের জায়গা দেখাও",
+        "বাংলাদেশে কোথায় ঘুরতে যাব", "popular destinations"
+      ]
+    },
+    {
+      "intent": "destination_type_beach",
+      "patterns": [
+        "beach destination", "sea beach", "cox bazar", "kuakata", "somudro dekhte chai",
+        "beach e ghurte chai", "সমুদ্র দেখতে চাই", "বিচ destination দেখাও",
+        "sea side place", "beach places"
+      ]
+    },
+    {
+      "intent": "destination_type_hill",
+      "patterns": [
+        "hill destination", "mountain place", "bandarban", "rangamati", "sajek",
+        "pahar e ghurte chai", "hill tract", "পাহাড় দেখতে চাই", "পাহাড়ি জায়গা দেখাও",
+        "mountain destination"
+      ]
+    },
+    {
+      "intent": "destination_type_forest",
+      "patterns": [
+        "forest destination", "sundarban", "mangrove forest", "jungle tour",
+        "bon dekhte chai", "forest place", "বন দেখতে চাই", "sundarban tour",
+        "wildlife destination"
+      ]
+    },
+    {
+      "intent": "destination_type_historical",
+      "patterns": [
+        "historical destination", "heritage place", "old place", "museum",
+        "lalbagh fort", "paharpur", "mahasthangarh", "ঐতিহাসিক জায়গা",
+        "history related destination", "historical place dekhao"
+      ]
+    },
+    {
+      "intent": "destination_fee_under",
+      "patterns": [
+        "entry fee under 500", "destination under 500", "low entry fee destination",
+        "kom entry fee", "500 takar niche destination", "free destination",
+        "কম খরচের destination", "cheap destination"
+      ]
+    },
+    {
+      "intent": "show_tours",
+      "patterns": [
+        "show tours", "all tours", "tour packages", "available tours", "upcoming tours",
+        "tour dekhao", "package dekhao", "সব tour দেখাও", "tour package দেখাও",
+        "upcoming tour ache", "next tour list"
+      ]
+    },
+    {
+      "intent": "tour_price_under",
+      "patterns": [
+        "tour under 5000", "show tours under 5000 taka", "tour below 5000",
+        "tour less than 5000", "5000 takar niche tour", "5000 takar kom tour",
+        "amar budget 5000", "5000 er moddhe tour chai", "kom dame tour dekhao",
+        "low price tour", "budget tour", "cheap tour", "কম দামের tour দেখাও",
+        "৫০০০ টাকার কম tour দেখাও", "budget er moddhe package dao"
+      ]
+    },
+    {
+      "intent": "tour_price_over",
+      "patterns": [
+        "tour over 5000", "show tours above 5000 taka", "tour more than 5000",
+        "tour greater than 5000", "5000 takar upor tour", "5000 takar beshi tour",
+        "5000 er upor package", "premium tour", "luxury tour", "high budget tour",
+        "expensive tour", "৫০০০ টাকার বেশি tour দেখাও", "premium package dao"
+      ]
+    },
+    {
+      "intent": "tour_price_between",
+      "patterns": [
+        "tour between 3000 and 8000", "show tours between 5000 and 10000",
+        "3000 to 8000 tour", "5000 theke 10000 tour", "5000 ar 10000 er moddhe tour",
+        "middle budget tour", "medium budget tour", "৫০০০ থেকে ১০০০০ টাকার tour",
+        "৩০০০ আর ৮০০০ এর মধ্যে tour", "range er moddhe tour chai"
+      ]
+    },
+    {
+      "intent": "tour_available_seats",
+      "patterns": [
+        "available seats", "seat ache", "tour seat available", "koyta seat ache",
+        "available seat tour", "seat khali ache", "খালি seat আছে", "tour availability",
+        "minimum 2 seats tour", "4 seats available tour"
+      ]
+    },
+    {
+      "intent": "tour_details",
+      "patterns": [
+        "tour details", "details of tour", "tour information", "tour er detail",
+        "package details", "tour itinerary", "tour plan", "tour duration",
+        "tour e ki ki thakbe", "tour সম্পর্কে বিস্তারিত"
+      ]
+    },
+    {
+      "intent": "booking_help",
+      "patterns": [
+        "how to book", "book tour", "tour book korbo kivabe", "booking process",
+        "booking korte chai", "tour reserve korte chai", "কিভাবে tour book করবো",
+        "booking help", "book korte problem"
+      ]
+    },
+    {
+      "intent": "booking_ticket",
+      "patterns": [
+        "booking ticket", "download ticket", "invoice", "pdf ticket", "booking invoice",
+        "ticket download", "invoice download", "pdf invoice", "booking receipt",
+        "ticket kothay pabo"
+      ]
+    },
+    {
+      "intent": "map_help",
+      "patterns": [
+        "map", "show map", "destination map", "tour route map", "location map",
+        "route map", "map dekhao", "location dekhao", "google map", "map e dekhaw"
+      ]
+    },
+    {
+      "intent": "review_help",
+      "patterns": [
+        "review", "rating", "write review", "tour review", "destination review",
+        "rating dite chai", "review dibo kivabe", "feedback dite chai",
+        "tour rating", "destination rating"
+      ]
+    },
+    {
+      "intent": "traveller_dashboard",
+      "patterns": [
+        "traveller dashboard", "my dashboard", "dashboard dekhao", "amar dashboard",
+        "traveller panel", "আমার dashboard দেখাও", "my overview", "traveller summary"
+      ]
+    },
+    {
+      "intent": "traveller_bookings",
+      "patterns": [
+        "my bookings", "show my bookings", "booking list", "amar booking",
+        "amar bookings dekhao", "আমার booking দেখাও", "আমি কোন tour book করেছি",
+        "my tour bookings", "booking status dekhao"
+      ]
+    },
+    {
+      "intent": "traveller_booking_pending",
+      "patterns": [
+        "my pending bookings", "pending booking dekhao", "amar pending booking",
+        "booking pending ache", "pending tour booking", "unconfirmed booking"
+      ]
+    },
+    {
+      "intent": "traveller_booking_confirmed",
+      "patterns": [
+        "my confirmed bookings", "confirmed booking dekhao", "amar confirmed booking",
+        "approved booking", "confirmed tour", "booking confirm hoyeche kina"
+      ]
+    },
+    {
+      "intent": "traveller_booking_completed",
+      "patterns": [
+        "my completed bookings", "completed tour", "past booking", "old booking",
+        "আগের booking", "completed booking dekhao", "travel history"
+      ]
+    },
+    {
+      "intent": "traveller_trips",
+      "patterns": [
+        "my trips", "show my trips", "trip list", "amar trip", "amar trips dekhao",
+        "আমার trip দেখাও", "trip plan", "planned trips", "trip dashboard"
+      ]
+    },
+    {
+      "intent": "traveller_wishlist",
+      "patterns": [
+        "my wishlist", "saved tours", "saved destinations", "wishlist dekhao",
+        "amar saved item", "আমার wishlist দেখাও", "saved item dekhao",
+        "favourite tours", "favorite destination"
+      ]
+    },
+    {
+      "intent": "traveller_budget_summary",
+      "patterns": [
+        "my budget summary", "trip budget", "expense summary", "my expenses",
+        "budget dekhao", "amar expense", "total cost", "trip cost summary",
+        "আমি কত খরচ করেছি"
+      ]
+    },
+    {
+      "intent": "guide_dashboard",
+      "patterns": [
+        "guide dashboard", "my guide dashboard", "guide panel", "guide summary",
+        "amar guide dashboard", "guide dashboard dekhao", "guide overview"
+      ]
+    },
+    {
+      "intent": "guide_my_tours",
+      "patterns": [
+        "my tours", "guide tours", "manage tours", "amar tour list", "my created tours",
+        "guide er tour", "tour manage korbo", "created package"
+      ]
+    },
+    {
+      "intent": "guide_pending_bookings",
+      "patterns": [
+        "pending bookings", "show pending bookings", "new bookings", "booking request",
+        "guide pending booking", "pending booking dekhao", "নতুন booking দেখাও",
+        "approval waiting booking"
+      ]
+    },
+    {
+      "intent": "guide_recent_bookings",
+      "patterns": [
+        "recent bookings", "latest bookings", "booking history", "recent booking dekhao",
+        "last booking", "সাম্প্রতিক booking", "latest tour booking"
+      ]
+    },
+    {
+      "intent": "guide_confirmed_bookings",
+      "patterns": [
+        "confirmed bookings", "approved bookings", "accepted bookings",
+        "confirmed booking list", "guide confirmed booking", "approved traveller"
+      ]
+    },
+    {
+      "intent": "guide_availability",
+      "patterns": [
+        "guide availability", "availability calendar", "manage availability", "calendar manage",
+        "available date", "unavailable date", "guide calendar", "availability set korbo",
+        "calendar dekhao", "date unavailable korbo"
+      ]
+    },
+    {
+      "intent": "guide_payment_verification",
+      "patterns": [
+        "payment verification", "verify payment", "payment proof", "pending payment",
+        "traveller payment check", "payment approve korbo", "payment confirm",
+        "bkash proof check"
+      ]
+    },
+    {
+      "intent": "admin_dashboard",
+      "patterns": [
+        "admin dashboard", "admin panel", "admin summary", "system summary",
+        "admin dashboard dekhao", "dashboard for admin", "platform overview"
+      ]
+    },
+    {
+      "intent": "admin_users",
+      "patterns": [
+        "users", "all users", "manage users", "user list", "traveller list",
+        "guide users", "admin users", "registered users", "users dekhao"
+      ]
+    },
+    {
+      "intent": "admin_pending_guides",
+      "patterns": [
+        "pending guide groups", "guide verification", "pending guides", "verify guide group",
+        "unverified guide", "guide group approval", "pending guide dekhao",
+        "guide approve korte chai"
+      ]
+    },
+    {
+      "intent": "admin_destinations",
+      "patterns": [
+        "manage destinations", "destination admin", "destination list admin",
+        "add destination", "edit destination", "delete destination", "admin destination"
+      ]
+    },
+    {
+      "intent": "admin_tours",
+      "patterns": [
+        "manage tours", "tour admin", "all tour packages", "admin tour list",
+        "tour approval", "tour management", "delete tour", "edit tour"
+      ]
+    },
+    {
+      "intent": "admin_bookings",
+      "patterns": [
+        "all bookings", "booking admin", "manage bookings", "booking list admin",
+        "platform bookings", "admin booking status", "all tour bookings"
+      ]
+    },
+    {
+      "intent": "admin_activity_logs",
+      "patterns": [
+        "activity logs", "admin logs", "system logs", "show activity", "admin activity",
+        "log dekhao", "কে কি action করেছে", "platform log"
+      ]
+    },
+    {
+      "intent": "admin_contact_messages",
+      "patterns": [
+        "contact messages", "user messages", "support messages", "admin messages",
+        "show contact messages", "traveller message", "guide message",
+        "contact message dekhao", "support inbox"
+      ]
+    },
+    {
+      "intent": "unsafe_delete_action",
+      "patterns": [
+        "delete user", "delete booking", "delete tour", "remove account", "delete destination",
+        "সব delete করো", "user delete korte chai", "tour delete kore dao"
+      ]
+    },
+    {
+      "intent": "unsafe_update_action",
+      "patterns": [
+        "confirm booking", "approve guide", "verify guide", "change booking status",
+        "payment approve", "mark completed", "booking complete kore dao",
+        "guide verify kore dao"
+      ]
+    },
+    {
+      "intent": "fallback_general",
+      "patterns": [
+        "i do not know", "random question", "something else", "unknown",
+        "ki bolbo bujhtesi na", "other question", "bla bla", "test message"
+      ]
+    }
+  ]
+}

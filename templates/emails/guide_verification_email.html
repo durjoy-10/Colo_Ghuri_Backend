@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Guide Group Verified - Colo Ghuri</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+            background: #f9fafb;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f3f4f6;
+            color: #6b7280;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✅ Guide Group Verified!</h1>
+            <p>{{ guide_group.guide_groupname }}</p>
+        </div>
+        <div class="content">
+            <h2>Congratulations {{ user.first_name|default:user.username }}!</h2>
+            <p>Your guide group <strong>"{{ guide_group.guide_groupname }}"</strong> has been verified by our admin team.</p>
+            
+            <p>Click the button below to verify your email and activate your guide account:</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ verification_url }}" class="button">Verify Email & Activate Account</a>
+            </div>
+            
+            <p>Once verified, you can:</p>
+            <ul>
+                <li>✅ Create and manage tour packages</li>
+                <li>✅ Upload tour images and itineraries</li>
+                <li>✅ Receive booking requests</li>
+                <li>✅ Track your earnings</li>
+            </ul>
+            
+            <hr>
+            <p>Best regards,<br>The Colo Ghuri Team</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 Colo Ghuri. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
