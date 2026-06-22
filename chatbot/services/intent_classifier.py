@@ -40,7 +40,8 @@ def generate_extra_training_examples():
             f'amar budget {amount}',
             f'budget {amount} er moddhe tour chai',
             f'{amount} টাকার কম tour',
-            f'{amount} টাকার নিচে tour'
+            f'{amount} টাকার নিচে tour',
+            f'{amount} বাজেটের tour',
         ]
 
         over_patterns = [
@@ -53,7 +54,7 @@ def generate_extra_training_examples():
             f'{amount} er upor tour',
             f'{amount} er beshi package',
             f'{amount} টাকার বেশি tour',
-            f'{amount} টাকার উপর tour'
+            f'{amount} টাকার উপর tour',
         ]
 
         for pattern in under_patterns:
@@ -72,7 +73,8 @@ def generate_extra_training_examples():
                     f'{low} theke {high} tour',
                     f'{low} ar {high} er moddhe tour',
                     f'{low}-{high} package',
-                    f'{low} থেকে {high} টাকার tour'
+                    f'{low} থেকে {high} টাকার tour',
+                    f'{low} থেকে {high} budget package',
                 ]
 
                 for pattern in between_patterns:
@@ -82,9 +84,11 @@ def generate_extra_training_examples():
         ('my pending booking', 'traveller_booking_pending'),
         ('pending booking dekhao', 'traveller_booking_pending'),
         ('amar pending bookings', 'traveller_booking_pending'),
+        ('pending tour booking', 'traveller_booking_pending'),
         ('my confirmed booking', 'traveller_booking_confirmed'),
         ('confirmed booking dekhao', 'traveller_booking_confirmed'),
         ('amar confirmed bookings', 'traveller_booking_confirmed'),
+        ('confirmed tour booking', 'traveller_booking_confirmed'),
         ('my completed booking', 'traveller_booking_completed'),
         ('completed booking dekhao', 'traveller_booking_completed'),
         ('past tour booking', 'traveller_booking_completed'),
@@ -133,18 +137,20 @@ def train_intent_model(dataset_path=DATASET_PATH, model_path=MODEL_PATH, metrics
             TfidfVectorizer(
                 lowercase=True,
                 analyzer='char_wb',
-                ngram_range=(2, 5),
-                min_df=1
-            )
+                ngram_range=(2, 4),
+                min_df=1,
+            ),
         ),
         (
             'classifier',
             LogisticRegression(
-                max_iter=3000,
+                max_iter=1500,
                 class_weight='balanced',
-                random_state=42
-            )
-        )
+                random_state=42,
+                solver='saga',
+                tol=1e-3,
+            ),
+        ),
     ])
 
     model.fit(texts, labels)
@@ -156,7 +162,7 @@ def train_intent_model(dataset_path=DATASET_PATH, model_path=MODEL_PATH, metrics
         'total_training_examples': len(texts),
         'total_intents': len(set(labels)),
         'model_path': str(model_path),
-        'intents': sorted(list(set(labels)))
+        'intents': sorted(list(set(labels))),
     }
 
     with open(metrics_path, 'w', encoding='utf-8') as file:
@@ -171,14 +177,21 @@ class IntentClassifier:
         self.model = None
         self.load_or_train()
 
+    def should_retrain(self):
+        if not MODEL_PATH.exists():
+            return True
+
+        if not DATASET_PATH.exists():
+            return False
+
+        return DATASET_PATH.stat().st_mtime > MODEL_PATH.stat().st_mtime
+
     def load_or_train(self):
         MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
-        if MODEL_PATH.exists():
-            self.model = joblib.load(MODEL_PATH)
-            return
+        if self.should_retrain():
+            train_intent_model()
 
-        train_intent_model()
         self.model = joblib.load(MODEL_PATH)
 
     def predict(self, text):
@@ -188,7 +201,7 @@ class IntentClassifier:
             return {
                 'intent': 'fallback_general',
                 'confidence': 0.0,
-                'is_confident': False
+                'is_confident': False,
             }
 
         if self.model is None:
@@ -204,5 +217,5 @@ class IntentClassifier:
         return {
             'intent': intent,
             'confidence': round(confidence, 4),
-            'is_confident': confidence >= self.threshold
+            'is_confident': confidence >= self.threshold,
         }
