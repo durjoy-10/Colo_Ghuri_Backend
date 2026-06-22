@@ -1,3 +1,4 @@
+from .role_knowledge import RoleKnowledgeBase
 from django.db.models import Q, Sum
 
 from destinations.models import Destination
@@ -20,6 +21,7 @@ class HybridColoGhuriChatbotAgent:
         self.request = request
         self.rule_agent = ColoGhuriChatbotAgent(user=user, request=request)
         self.classifier = IntentClassifier()
+        self.knowledge_base = RoleKnowledgeBase()
 
     def role(self):
         if not self.user or not self.user.is_authenticated:
@@ -543,6 +545,10 @@ class HybridColoGhuriChatbotAgent:
                 'Please type a message.',
                 quick_replies=self.default_quick_replies()
             )
+            
+        kb_result = self.knowledge_base.answer(message, self.role())
+        if kb_result:
+            return kb_result
 
         nlu = self.classifier.predict(message)
         intent = nlu['intent']

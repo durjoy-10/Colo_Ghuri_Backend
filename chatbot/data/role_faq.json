@@ -1,0 +1,351 @@
+{
+  "common": [
+    {
+      "intent": "about_platform",
+      "questions": [
+        "what is colo ghuri",
+        "colo ghuri ki",
+        "চলো ঘুরি কি",
+        "platform ta ki",
+        "ei website er kaj ki"
+      ],
+      "answer": "Colo Ghuri / চলো ঘুরি একটি Bangladesh travel management platform. এখানে traveller destination explore করতে পারে, tour book করতে পারে, wishlist save করতে পারে, trip plan করতে পারে এবং guide group/admin পুরো travel system manage করতে পারে।",
+      "cards": [
+        {
+          "title": "Explore Colo Ghuri",
+          "description": "Destinations, tours, bookings, trip planner and guide services.",
+          "url": "/"
+        }
+      ],
+      "quick_replies": ["Show tours", "Show destinations", "How to register?"]
+    },
+    {
+      "intent": "registration_help",
+      "questions": [
+        "register korbo kivabe",
+        "account khulbo kivabe",
+        "how to register",
+        "sign up process",
+        "নতুন account করবো কিভাবে"
+      ],
+      "answer": "Traveller account তৈরি করতে Register page-এ গিয়ে নাম, email, phone এবং password দিয়ে signup করতে হবে। তারপর email verification link click করলে account active হবে। Guide group register করলে admin verification লাগবে।",
+      "cards": [
+        {
+          "title": "Register",
+          "description": "Create traveller or guide group account.",
+          "url": "/register"
+        }
+      ],
+      "quick_replies": ["Login help", "Payment methods"]
+    },
+    {
+      "intent": "login_help",
+      "questions": [
+        "login korte parchi na",
+        "password vule gechi",
+        "email verify hoy nai",
+        "login problem",
+        "লগইন হচ্ছে না"
+      ],
+      "answer": "Login করতে না পারলে আগে email verified কিনা check করুন। Password ভুলে গেলে Forgot Password ব্যবহার করুন। Email verification link না পেলে spam/promotions folder check করুন।",
+      "cards": [
+        {
+          "title": "Login",
+          "description": "Open login page.",
+          "url": "/login"
+        }
+      ],
+      "quick_replies": ["Forgot password", "Contact support"]
+    },
+    {
+      "intent": "payment_methods",
+      "questions": [
+        "payment kivabe korbo",
+        "bkash ache",
+        "nagad ache",
+        "cash payment",
+        "transaction id dite hobe",
+        "payment method ki ki"
+      ],
+      "answer": "Tour booking-এর payment method হিসেবে bKash, Nagad এবং Cash আছে। bKash/Nagad select করলে Transaction ID বা Payment ID দিতে হবে। Cash select করলে guide group-এর একজন guide reference select করতে হবে।",
+      "quick_replies": ["Book tour", "My bookings"]
+    },
+    {
+      "intent": "contact_support",
+      "questions": [
+        "support chai",
+        "admin er sathe kotha bolbo",
+        "problem report korbo",
+        "contact korbo kivabe",
+        "help lagbe"
+      ],
+      "answer": "Support দরকার হলে Contact page থেকে message পাঠানো যাবে। Logged-in user হলে আপনার name/email automatic use হবে।",
+      "cards": [
+        {
+          "title": "Contact Support",
+          "description": "Send a message to the support/admin team.",
+          "url": "/contact"
+        }
+      ],
+      "quick_replies": ["Show tours", "Show destinations"]
+    }
+  ],
+  "traveller": [
+    {
+      "intent": "traveller_booking_help",
+      "questions": [
+        "tour book korbo kivabe",
+        "how to book tour",
+        "booking korbo kivabe",
+        "tour reserve korte chai",
+        "প্যাকেজ বুক করবো কিভাবে"
+      ],
+      "answer": "Traveller হিসেবে tour book করতে Tours page-এ যান, পছন্দের tour package open করুন, Book Tour click করুন, number of travellers দিন, payment method select করুন এবং booking submit করুন।",
+      "cards": [
+        {
+          "title": "Tours",
+          "description": "Browse and book available tour packages.",
+          "url": "/tours"
+        }
+      ],
+      "quick_replies": ["Payment methods", "My bookings"]
+    },
+    {
+      "intent": "traveller_wishlist",
+      "questions": [
+        "wishlist kivabe use korbo",
+        "favourite save korbo kivabe",
+        "destination save korbo",
+        "tour favourite korbo",
+        "heart icon er kaj ki"
+      ],
+      "answer": "Destination বা Tour detail page-এ heart icon tap করলে সেটা wishlist/favourite-এ save হবে। Wishlist page থেকে saved destination/tour দেখা এবং remove করা যাবে।",
+      "cards": [
+        {
+          "title": "Wishlist",
+          "description": "View saved tours and destinations.",
+          "url": "/wishlist"
+        }
+      ],
+      "quick_replies": ["Show destinations", "Show tours"]
+    },
+    {
+      "intent": "traveller_trip_plan",
+      "questions": [
+        "trip plan korbo kivabe",
+        "my trip create",
+        "expense add korbo",
+        "budget manage korbo",
+        "নিজের trip বানাবো কিভাবে"
+      ],
+      "answer": "Traveller হিসেবে Trips section থেকে Create Trip Plan করতে পারবেন। সেখানে trip name, date, destination, budget add করা যাবে। Trip detail page থেকে expense add করে total expense এবং remaining budget দেখা যাবে।",
+      "cards": [
+        {
+          "title": "My Trips",
+          "description": "Create trip plans and manage expenses.",
+          "url": "/my-trips"
+        }
+      ],
+      "quick_replies": ["Budget summary", "My bookings"]
+    },
+    {
+      "intent": "traveller_booking_status",
+      "questions": [
+        "amar booking status",
+        "my booking status",
+        "booking pending kina",
+        "confirmed booking dekhao",
+        "আমার booking দেখাও"
+      ],
+      "answer": "আপনার booking status দেখতে My Bookings বা Traveller Dashboard open করুন। সেখানে pending, confirmed, completed বা cancelled status দেখা যাবে।",
+      "cards": [
+        {
+          "title": "My Bookings",
+          "description": "Check your tour booking status.",
+          "url": "/my-bookings"
+        }
+      ],
+      "quick_replies": ["My bookings", "Show tours"]
+    },
+    {
+      "intent": "traveller_review",
+      "questions": [
+        "review dibo kivabe",
+        "rating dite chai",
+        "destination review",
+        "tour review",
+        "feedback dibo"
+      ],
+      "answer": "Destination বা tour detail page থেকে review/rating দেওয়া যাবে। Tour review সাধারণত booking/completed tour-এর সাথে related থাকে।",
+      "quick_replies": ["Show destinations", "Show tours"]
+    }
+  ],
+  "guide": [
+    {
+      "intent": "guide_pending_verification",
+      "questions": [
+        "guide group pending keno",
+        "amar guide group verify hoy nai",
+        "guide group verify hobe kivabe",
+        "admin verify korbe kokhon",
+        "guide account active hocche na"
+      ],
+      "answer": "Guide group registration করার পর group pending থাকে। Admin panel থেকে admin verify করলে guide members-দের email-এ password setup link যাবে। তারপর guide login করে dashboard use করতে পারবে।",
+      "quick_replies": ["Contact support", "Guide dashboard"]
+    },
+    {
+      "intent": "guide_create_tour",
+      "questions": [
+        "tour create korbo kivabe",
+        "guide tour add korbe kivabe",
+        "package banabo kivabe",
+        "itinerary add korbo",
+        "food plan add korbo"
+      ],
+      "answer": "Guide হিসেবে tour create করতে guide group verified হতে হবে। তারপর Guide Dashboard থেকে tour name, description, price, seats, destinations, itinerary, arrival/departure time এবং food plan add করতে পারবেন।",
+      "cards": [
+        {
+          "title": "Manage Tours",
+          "description": "Create and manage guide group tour packages.",
+          "url": "/guide/tours"
+        }
+      ],
+      "quick_replies": ["Guide dashboard", "Pending bookings"]
+    },
+    {
+      "intent": "guide_booking_manage",
+      "questions": [
+        "booking manage korbo kivabe",
+        "pending booking dekhbo kivabe",
+        "traveller booking confirm korbo",
+        "guide booking list",
+        "booking status update"
+      ],
+      "answer": "Guide dashboard থেকে guide group-এর bookings দেখা যাবে। Pending booking review করে confirmed/cancelled/completed status update করা যাবে, যদি system permission allow করে।",
+      "cards": [
+        {
+          "title": "Guide Dashboard",
+          "description": "View bookings, revenue and guide group summary.",
+          "url": "/guide/dashboard"
+        }
+      ],
+      "quick_replies": ["Pending bookings", "Recent bookings"]
+    },
+    {
+      "intent": "guide_revenue",
+      "questions": [
+        "my revenue koto",
+        "earning koto",
+        "guide profit",
+        "tour revenue",
+        "income summary"
+      ],
+      "answer": "Guide dashboard থেকে total booking, total revenue, expenses এবং profit summary দেখা যাবে। এগুলো guide group-এর tour bookings থেকে calculate করা হয়।",
+      "cards": [
+        {
+          "title": "Guide Dashboard",
+          "description": "Check guide group revenue and profit.",
+          "url": "/guide/dashboard"
+        }
+      ],
+      "quick_replies": ["Guide dashboard", "Recent bookings"]
+    }
+  ],
+  "admin": [
+    {
+      "intent": "admin_verify_guide_group",
+      "questions": [
+        "guide group verify korbo kivabe",
+        "pending guide group approve",
+        "guide verify button",
+        "guide group verification",
+        "admin guide approve"
+      ],
+      "answer": "Admin হিসেবে Guide Groups page-এ গিয়ে Pending Verifications section থেকে Verify Group button click করতে হবে। Verify হলে guide group active হবে এবং guide members-দের password setup email যাবে।",
+      "cards": [
+        {
+          "title": "Guide Groups",
+          "description": "Verify or reject pending guide groups.",
+          "url": "/admin/guide-groups"
+        }
+      ],
+      "quick_replies": ["Pending guide groups", "Admin dashboard"]
+    },
+    {
+      "intent": "admin_destination_manage",
+      "questions": [
+        "destination add korbo kivabe",
+        "admin destination manage",
+        "destination edit korbo",
+        "destination image add",
+        "map coordinate add"
+      ],
+      "answer": "Admin panel থেকে destination add/edit করা যায়। Destination name, location, description, type, entry fee, opening hours, latitude/longitude এবং images add করা যায়।",
+      "cards": [
+        {
+          "title": "Manage Destinations",
+          "description": "Add, edit and manage travel destinations.",
+          "url": "/admin/destinations"
+        }
+      ],
+      "quick_replies": ["Admin tours", "Admin dashboard"]
+    },
+    {
+      "intent": "admin_tour_manage",
+      "questions": [
+        "admin tour manage",
+        "tour delete edit",
+        "all tours dekhbo",
+        "tour package monitor",
+        "admin package"
+      ],
+      "answer": "Admin panel থেকে platform-এর সব tour package monitor করা যায়। Guide group, price, seats, status, bookings এবং tour details দেখা যায়।",
+      "cards": [
+        {
+          "title": "Manage Tours",
+          "description": "Monitor and manage tour packages.",
+          "url": "/admin/tours"
+        }
+      ],
+      "quick_replies": ["Admin bookings", "Admin dashboard"]
+    },
+    {
+      "intent": "admin_booking_manage",
+      "questions": [
+        "all booking dekhbo",
+        "admin booking manage",
+        "booking monitor",
+        "booking status dekhbo",
+        "platform booking"
+      ],
+      "answer": "Admin panel থেকে সব booking monitor করা যায়। Traveller, tour, guide group, payment method, payment ID, booking status এবং total amount দেখা যায়।",
+      "cards": [
+        {
+          "title": "Manage Bookings",
+          "description": "Review platform bookings.",
+          "url": "/admin/bookings"
+        }
+      ],
+      "quick_replies": ["Admin dashboard", "Activity logs"]
+    },
+    {
+      "intent": "admin_activity_logs",
+      "questions": [
+        "activity log ki",
+        "admin log dekhbo",
+        "system activity",
+        "ke ki kaj korse",
+        "platform monitoring"
+      ],
+      "answer": "Activity Logs থেকে platform-এর important actions দেখা যায়, যেমন booking creation, guide verification, destination/tour update ইত্যাদি।",
+      "cards": [
+        {
+          "title": "Activity Logs",
+          "description": "Monitor platform actions.",
+          "url": "/admin/activity-logs"
+        }
+      ],
+      "quick_replies": ["Admin dashboard", "Contact messages"]
+    }
+  ]
+}
