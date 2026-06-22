@@ -11,6 +11,7 @@ from users.models import User
 from tours.models import Tour, TourBooking
 from django.db.models import Sum, Count, Q
 from decimal import Decimal
+import threading
 
 
 class IsGuideOrAdmin(BasePermission):
@@ -385,27 +386,75 @@ class PendingGuideGroupsView(generics.ListAPIView):
 
 class VerifyGuideGroupView(APIView):
     permission_classes = (permissions.IsAdminUser,)
-    
+
+    def _send_emails_in_background(self, guide_group_id):
+        try:
+            guide_group = GuideGroup.objects.get(guide_group_id=guide_group_id)
+            guides = guide_group.guides.all()
+
+            emails_sent = 0
+            emails_failed = 0
+
+            print("\n=== BACKGROUND GUIDE EMAIL TASK STARTED ===")
+            print(f"Guide Group: {guide_group.guide_groupname}")
+            print(f"Total Guides: {guides.count()}")
+            print("==========================================\n")
+
+            for guide in guides:
+                try:
+                    if send_guide_acceptance_email(guide, guide_group, None):
+                        emails_sent += 1
+                    else:
+                        emails_failed += 1
+                except Exception as email_error:
+                    emails_failed += 1
+                    print(f"❌ Email failed for {guide.email}: {str(email_error)}")
+
+            print("\n=== BACKGROUND GUIDE EMAIL TASK FINISHED ===")
+            print(f"Emails Sent: {emails_sent}")
+            print(f"Emails Failed: {emails_failed}")
+            print("===========================================\n")
+
+        except Exception as e:
+            print(f"❌ Background guide email task failed: {str(e)}")
+
     def post(self, request, group_id):
         try:
             guide_group = GuideGroup.objects.get(guide_group_id=group_id)
+
+            if guide_group.is_verified:
+                return Response({
+                    "success": True,
+                    "message": "Guide group is already verified.",
+                    "emails_started": False,
+                })
+
             guide_group.is_verified = True
             guide_group.save()
-            
-            # Send acceptance emails to all guides in the group (with password setup link)
-            guides = guide_group.guides.all()
-            emails_sent = 0
-            for guide in guides:
-                if send_guide_acceptance_email(guide, guide_group, request):
-                    emails_sent += 1
-            
+
+            thread = threading.Thread(
+                target=self._send_emails_in_background,
+                args=(guide_group.guide_group_id,),
+                daemon=True,
+            )
+            thread.start()
+
             return Response({
-                'success': True,
-                'message': f'Guide group verified successfully! Password setup emails sent to {emails_sent} guides.',
-                'emails_sent': emails_sent
+                "success": True,
+                "message": "Guide group verified successfully. Password setup emails are being sent.",
+                "emails_started": True,
             })
+
         except GuideGroup.DoesNotExist:
-            return Response({'error': 'Guide group not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Guide group not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class RejectGuideGroupView(APIView):

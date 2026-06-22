@@ -18,7 +18,7 @@ def get_frontend_url():
     return getattr(
         settings,
         "FRONTEND_URL",
-        os.environ.get("FRONTEND_URL", "http://localhost:5173"),
+        os.environ.get("FRONTEND_URL", "https://colo-ghuri-frontend.vercel.app"),
     ).rstrip("/")
 
 
