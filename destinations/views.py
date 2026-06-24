@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, filters, status
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.pagination import PageNumberPagination
 
 from .models import Destination, DestinationImage
 from .serializers import (
@@ -10,10 +11,15 @@ from .serializers import (
     DestinationImageSerializer,
 )
 
+class DestinationPagination(PageNumberPagination):
+    page_size = 12
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class DestinationListView(generics.ListAPIView):
     serializer_class = DestinationListSerializer
     permission_classes = (permissions.AllowAny,)
+    pagination_class = DestinationPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'location', 'description']
     ordering_fields = ['average_rating', 'entry_fee', 'name', 'created_at']
