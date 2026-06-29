@@ -1,9 +1,43 @@
+from decimal import Decimal
+
 from django.db.models import Avg
 from rest_framework import serializers
 
-from .models import Tour, TourImage, TourDestination, FoodPlan, TourBooking
+from .models import FoodPlan, Tour, TourBooking, TourDestination, TourImage
 from destinations.serializers import DestinationSerializer
 from guides.serializers import GuideGroupSerializer
+
+
+def _build_absolute_url(request, url):
+    if not url:
+        return None
+    return request.build_absolute_uri(url) if request else url
+
+
+def _prefetched_images(obj):
+    images = getattr(obj, 'prefetched_images', None)
+
+    if images is None:
+        cache = getattr(obj, '_prefetched_objects_cache', {})
+        images = cache.get('images')
+
+    if images is None:
+        images = obj.images.all()
+
+    return sorted(list(images), key=lambda image: image.order or 0)
+
+
+def _primary_tour_image(obj):
+    images = _prefetched_images(obj)
+    primary = next((image for image in images if image.is_primary), None)
+    return primary or (images[0] if images else None)
+
+
+def _annotated_number(obj, attr_name, fallback):
+    value = getattr(obj, attr_name, None)
+    if value is not None:
+        return value
+    return fallback()
 
 
 class FoodPlanSerializer(serializers.ModelSerializer):
@@ -31,18 +65,125 @@ class TourImageSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         request = self.context.get('request')
         if obj.image:
-            return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+            return _build_absolute_url(request, obj.image.url)
         return None
+
+
+class TourListSerializer(serializers.ModelSerializer):
+    images = serializers.SerializerMethodField()
+    guide_group_name = serializers.CharField(source='guide_group.guide_groupname', read_only=True)
+    guide_group_phone = serializers.CharField(source='guide_group.phone_number', read_only=True)
+    guide_group_email = serializers.CharField(source='guide_group.email', read_only=True)
+    cover_image_url = serializers.SerializerMethodField()
+    final_price = serializers.SerializerMethodField()
+    booked_seats = serializers.SerializerMethodField()
+    total_revenue = serializers.SerializerMethodField()
+    rating_average = serializers.SerializerMethodField()
+    review_count = serializers.SerializerMethodField()
+    is_wishlisted = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Tour
+        fields = (
+            'tour_id',
+            'tour_name',
+            'guide_group',
+            'guide_group_name',
+            'guide_group_phone',
+            'guide_group_email',
+            'description',
+            'total_seats',
+            'available_seats',
+            'price_per_person',
+            'discount_percentage',
+            'final_price',
+            'status',
+            'created_at',
+            'updated_at',
+            'cover_image',
+            'cover_image_url',
+            'images',
+            'total_expenses',
+            'is_locked',
+            'booked_seats',
+            'total_revenue',
+            'rating_average',
+            'review_count',
+            'is_wishlisted',
+        )
+        read_only_fields = fields
+
+    def get_images(self, obj):
+        return TourImageSerializer(
+            _prefetched_images(obj),
+            many=True,
+            context=self.context,
+        ).data
+
+    def get_cover_image_url(self, obj):
+        request = self.context.get('request')
+
+        if obj.cover_image:
+            return _build_absolute_url(request, obj.cover_image.url)
+
+        first_image = _primary_tour_image(obj)
+        if first_image and first_image.image:
+            return _build_absolute_url(request, first_image.image.url)
+
+        return None
+
+    def get_final_price(self, obj):
+        return obj.price_per_person * (Decimal('1') - (obj.discount_percentage / Decimal('100')))
+
+    def get_booked_seats(self, obj):
+        return int(_annotated_number(obj, 'booked_seats_value', lambda: obj.booked_seats) or 0)
+
+    def get_total_revenue(self, obj):
+        return self.get_booked_seats(obj) * self.get_final_price(obj)
+
+    def get_rating_average(self, obj):
+        value = getattr(obj, 'rating_average_value', None)
+        if value is None:
+            from engagement.models import TourReview
+
+            value = TourReview.objects.filter(tour=obj).aggregate(avg=Avg('rating'))['avg'] or 0
+        return round(float(value or 0), 2)
+
+    def get_review_count(self, obj):
+        value = getattr(obj, 'review_count_value', None)
+        if value is None:
+            from engagement.models import TourReview
+
+            value = TourReview.objects.filter(tour=obj).count()
+        return int(value or 0)
+
+    def get_is_wishlisted(self, obj):
+        annotated_value = getattr(obj, 'is_wishlisted_value', None)
+        if annotated_value is not None:
+            return bool(annotated_value)
+
+        request = self.context.get('request')
+
+        if not request or not request.user.is_authenticated:
+            return False
+
+        from engagement.models import WishlistItem
+
+        return WishlistItem.objects.filter(
+            user=request.user,
+            item_type='tour',
+            tour=obj
+        ).exists()
 
 
 class TourSerializer(serializers.ModelSerializer):
     destinations = TourDestinationSerializer(many=True, read_only=True)
-    images = TourImageSerializer(many=True, read_only=True)
+    images = serializers.SerializerMethodField()
     guide_group_details = GuideGroupSerializer(source='guide_group', read_only=True)
     cover_image_url = serializers.SerializerMethodField()
-    final_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    booked_seats = serializers.IntegerField(read_only=True)
-    total_revenue = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    final_price = serializers.SerializerMethodField()
+    booked_seats = serializers.SerializerMethodField()
+    total_revenue = serializers.SerializerMethodField()
     rating_average = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
     is_wishlisted = serializers.SerializerMethodField()
@@ -60,33 +201,55 @@ class TourSerializer(serializers.ModelSerializer):
             'total_revenue',
         )
 
+    def get_images(self, obj):
+        return TourImageSerializer(
+            _prefetched_images(obj),
+            many=True,
+            context=self.context,
+        ).data
+
     def get_cover_image_url(self, obj):
         request = self.context.get('request')
 
         if obj.cover_image:
-            return request.build_absolute_uri(obj.cover_image.url) if request else obj.cover_image.url
+            return _build_absolute_url(request, obj.cover_image.url)
 
-        first_image = obj.images.filter(is_primary=True).first()
-        if not first_image:
-            first_image = obj.images.first()
-
+        first_image = _primary_tour_image(obj)
         if first_image and first_image.image:
-            return request.build_absolute_uri(first_image.image.url) if request else first_image.image.url
+            return _build_absolute_url(request, first_image.image.url)
 
         return None
 
-    def get_rating_average(self, obj):
-        from engagement.models import TourReview
+    def get_final_price(self, obj):
+        return obj.price_per_person * (Decimal('1') - (obj.discount_percentage / Decimal('100')))
 
-        avg = TourReview.objects.filter(tour=obj).aggregate(avg=Avg('rating'))['avg'] or 0
-        return round(avg, 2)
+    def get_booked_seats(self, obj):
+        return int(_annotated_number(obj, 'booked_seats_value', lambda: obj.booked_seats) or 0)
+
+    def get_total_revenue(self, obj):
+        return self.get_booked_seats(obj) * self.get_final_price(obj)
+
+    def get_rating_average(self, obj):
+        value = getattr(obj, 'rating_average_value', None)
+        if value is None:
+            from engagement.models import TourReview
+
+            value = TourReview.objects.filter(tour=obj).aggregate(avg=Avg('rating'))['avg'] or 0
+        return round(float(value or 0), 2)
 
     def get_review_count(self, obj):
-        from engagement.models import TourReview
+        value = getattr(obj, 'review_count_value', None)
+        if value is None:
+            from engagement.models import TourReview
 
-        return TourReview.objects.filter(tour=obj).count()
+            value = TourReview.objects.filter(tour=obj).count()
+        return int(value or 0)
 
     def get_is_wishlisted(self, obj):
+        annotated_value = getattr(obj, 'is_wishlisted_value', None)
+        if annotated_value is not None:
+            return bool(annotated_value)
+
         request = self.context.get('request')
 
         if not request or not request.user.is_authenticated:
@@ -140,7 +303,7 @@ class TourCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class TourBookingSerializer(serializers.ModelSerializer):
-    tour_details = TourSerializer(source='tour', read_only=True)
+    tour_details = TourListSerializer(source='tour', read_only=True)
     traveller_details = serializers.SerializerMethodField()
 
     class Meta:

@@ -2,6 +2,32 @@ from rest_framework import serializers
 from .models import Destination, DestinationImage, DestinationMap
 
 
+def _build_absolute_url(request, url):
+    if not url:
+        return None
+    return request.build_absolute_uri(url) if request else url
+
+
+def _prefetched_images(obj):
+    """Return images without creating a new query when views used Prefetch(to_attr)."""
+    images = getattr(obj, 'prefetched_images', None)
+
+    if images is None:
+        cache = getattr(obj, '_prefetched_objects_cache', {})
+        images = cache.get('images')
+
+    if images is None:
+        images = obj.images.all()
+
+    return sorted(list(images), key=lambda image: image.order or 0)
+
+
+def _primary_image(obj):
+    images = _prefetched_images(obj)
+    primary = next((image for image in images if image.is_primary), None)
+    return primary or (images[0] if images else None)
+
+
 class DestinationImageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
 
@@ -12,7 +38,7 @@ class DestinationImageSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         request = self.context.get('request')
         if obj.image:
-            return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+            return _build_absolute_url(request, obj.image.url)
         return None
 
 
@@ -23,7 +49,7 @@ class DestinationMapSerializer(serializers.ModelSerializer):
 
 
 class DestinationSerializer(serializers.ModelSerializer):
-    images = DestinationImageSerializer(many=True, read_only=True)
+    images = serializers.SerializerMethodField()
     map_details = DestinationMapSerializer(source='map', read_only=True)
     primary_image = serializers.SerializerMethodField()
     is_wishlisted = serializers.SerializerMethodField()
@@ -40,18 +66,27 @@ class DestinationSerializer(serializers.ModelSerializer):
             'total_reviews',
         )
 
+    def get_images(self, obj):
+        return DestinationImageSerializer(
+            _prefetched_images(obj),
+            many=True,
+            context=self.context,
+        ).data
+
     def get_primary_image(self, obj):
         request = self.context.get('request')
-        primary = obj.images.filter(is_primary=True).first()
-        if not primary:
-            primary = obj.images.first()
+        primary = _primary_image(obj)
 
         if primary and primary.image:
-            return request.build_absolute_uri(primary.image.url) if request else primary.image.url
+            return _build_absolute_url(request, primary.image.url)
 
         return None
 
     def get_is_wishlisted(self, obj):
+        annotated_value = getattr(obj, 'is_wishlisted_value', None)
+        if annotated_value is not None:
+            return bool(annotated_value)
+
         request = self.context.get('request')
 
         if not request or not request.user.is_authenticated:
@@ -71,12 +106,16 @@ class DestinationSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return None
 
-        from engagement.models import DestinationReview
+        prefetched_review = getattr(obj, 'user_review_value', None)
+        review = prefetched_review
 
-        review = DestinationReview.objects.filter(
-            user=request.user,
-            destination=obj
-        ).first()
+        if review is None:
+            from engagement.models import DestinationReview
+
+            review = DestinationReview.objects.filter(
+                user=request.user,
+                destination=obj
+            ).first()
 
         if not review:
             return None
@@ -113,16 +152,18 @@ class DestinationListSerializer(serializers.ModelSerializer):
 
     def get_primary_image(self, obj):
         request = self.context.get('request')
-        primary = obj.images.filter(is_primary=True).first()
-        if not primary:
-            primary = obj.images.first()
+        primary = _primary_image(obj)
 
         if primary and primary.image:
-            return request.build_absolute_uri(primary.image.url) if request else primary.image.url
+            return _build_absolute_url(request, primary.image.url)
 
         return None
 
     def get_is_wishlisted(self, obj):
+        annotated_value = getattr(obj, 'is_wishlisted_value', None)
+        if annotated_value is not None:
+            return bool(annotated_value)
+
         request = self.context.get('request')
 
         if not request or not request.user.is_authenticated:

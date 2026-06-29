@@ -1,12 +1,12 @@
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from rest_framework import permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from users.models import User
-from destinations.models import Destination
-from tours.models import Tour, TourBooking
+from destinations.models import Destination, DestinationImage
+from tours.models import Tour, TourBooking, TourImage
 from guides.models import Guide
 
 from .models import WishlistItem, DestinationReview, TourReview, Notification
@@ -66,11 +66,21 @@ class WishlistListView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
+        destination_images = DestinationImage.objects.only(
+            'id', 'destination_id', 'image', 'caption', 'is_primary', 'order'
+        ).order_by('order')
+        tour_images = TourImage.objects.only(
+            'image_id', 'tour_id', 'image', 'caption', 'is_primary', 'order'
+        ).order_by('order')
+
         return WishlistItem.objects.filter(user=self.request.user).select_related(
             'destination',
             'tour',
             'tour__guide_group',
-        )
+        ).prefetch_related(
+            Prefetch('destination__images', queryset=destination_images, to_attr='prefetched_images'),
+            Prefetch('tour__images', queryset=tour_images, to_attr='prefetched_images'),
+        ).order_by('-created_at')
 
     def get_serializer_context(self):
         return {'request': self.request}

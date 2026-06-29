@@ -1,20 +1,23 @@
-from rest_framework import generics, permissions, filters, status
-from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from django.db.models import Exists, OuterRef, Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics, permissions, status
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.response import Response
 
 from .models import Destination, DestinationImage
 from .serializers import (
-    DestinationSerializer,
-    DestinationListSerializer,
     DestinationImageSerializer,
+    DestinationListSerializer,
+    DestinationSerializer,
 )
+
 
 class DestinationPagination(PageNumberPagination):
     page_size = 12
     page_size_query_param = 'page_size'
-    max_page_size = 100
+    max_page_size = 50
+
 
 class DestinationListView(generics.ListAPIView):
     serializer_class = DestinationListSerializer
@@ -25,7 +28,29 @@ class DestinationListView(generics.ListAPIView):
     ordering_fields = ['average_rating', 'entry_fee', 'name', 'created_at']
 
     def get_queryset(self):
-        queryset = Destination.objects.prefetch_related('images').all()
+        image_queryset = DestinationImage.objects.only(
+            'id',
+            'destination_id',
+            'image',
+            'caption',
+            'is_primary',
+            'order',
+        ).order_by('order')
+
+        queryset = Destination.objects.prefetch_related(
+            Prefetch('images', queryset=image_queryset, to_attr='prefetched_images')
+        )
+
+        user = self.request.user
+        if user.is_authenticated:
+            from engagement.models import WishlistItem
+
+            wishlist_queryset = WishlistItem.objects.filter(
+                user=user,
+                item_type='destination',
+                destination_id=OuterRef('pk'),
+            )
+            queryset = queryset.annotate(is_wishlisted_value=Exists(wishlist_queryset))
 
         destination_type = self.request.query_params.get('destination_type')
         is_popular = self.request.query_params.get('is_popular')
@@ -67,11 +92,38 @@ class DestinationListView(generics.ListAPIView):
 
         return queryset
 
+
 class DestinationDetailView(generics.RetrieveAPIView):
-    queryset = Destination.objects.all()
     serializer_class = DestinationSerializer
     permission_classes = (permissions.AllowAny,)
     lookup_field = 'destination_id'
+
+    def get_queryset(self):
+        image_queryset = DestinationImage.objects.only(
+            'id',
+            'destination_id',
+            'image',
+            'caption',
+            'is_primary',
+            'order',
+        ).order_by('order')
+
+        queryset = Destination.objects.select_related('map').prefetch_related(
+            Prefetch('images', queryset=image_queryset, to_attr='prefetched_images')
+        )
+
+        user = self.request.user
+        if user.is_authenticated:
+            from engagement.models import WishlistItem
+
+            wishlist_queryset = WishlistItem.objects.filter(
+                user=user,
+                item_type='destination',
+                destination_id=OuterRef('pk'),
+            )
+            queryset = queryset.annotate(is_wishlisted_value=Exists(wishlist_queryset))
+
+        return queryset
 
 
 class DestinationCreateView(generics.CreateAPIView):

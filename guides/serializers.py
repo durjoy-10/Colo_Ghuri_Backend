@@ -27,7 +27,17 @@ class GuideGroupSerializer(serializers.ModelSerializer):
         read_only_fields = ('guide_group_id', 'created_at', 'is_verified', 'guides')
 
     def get_guides(self, obj):
-        guides = obj.guides.all().order_by('guide_id')
+        guides = getattr(obj, 'prefetched_guides', None)
+
+        if guides is None:
+            cache = getattr(obj, '_prefetched_objects_cache', {})
+            guides = cache.get('guides')
+
+        if guides is None:
+            guides = obj.guides.all().order_by('guide_id')
+        else:
+            guides = sorted(list(guides), key=lambda guide: guide.guide_id or 0)
+
         return PublicGuideSerializer(guides, many=True, context=self.context).data
 
 

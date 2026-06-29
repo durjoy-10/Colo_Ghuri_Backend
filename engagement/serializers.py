@@ -1,6 +1,31 @@
 from rest_framework import serializers
 
-from .models import WishlistItem, DestinationReview, TourReview, Notification
+from .models import DestinationReview, Notification, TourReview, WishlistItem
+
+
+def _build_absolute_url(request, url):
+    if not url:
+        return None
+    return request.build_absolute_uri(url) if request else url
+
+
+def _prefetched_related_images(obj):
+    images = getattr(obj, 'prefetched_images', None)
+
+    if images is None:
+        cache = getattr(obj, '_prefetched_objects_cache', {})
+        images = cache.get('images')
+
+    if images is None:
+        images = obj.images.all()
+
+    return sorted(list(images), key=lambda image: image.order or 0)
+
+
+def _first_image(obj):
+    images = _prefetched_related_images(obj)
+    primary = next((image for image in images if image.is_primary), None)
+    return primary or (images[0] if images else None)
 
 
 class WishlistItemSerializer(serializers.ModelSerializer):
@@ -42,13 +67,10 @@ class WishlistItemSerializer(serializers.ModelSerializer):
 
     def get_item_image(self, obj):
         request = self.context.get('request')
-
         image_url = None
 
         if obj.item_type == 'destination' and obj.destination:
-            primary = obj.destination.images.filter(is_primary=True).first()
-            if not primary:
-                primary = obj.destination.images.first()
+            primary = _first_image(obj.destination)
             if primary and primary.image:
                 image_url = primary.image.url
 
@@ -56,16 +78,11 @@ class WishlistItemSerializer(serializers.ModelSerializer):
             if obj.tour.cover_image:
                 image_url = obj.tour.cover_image.url
             else:
-                primary = obj.tour.images.filter(is_primary=True).first()
-                if not primary:
-                    primary = obj.tour.images.first()
+                primary = _first_image(obj.tour)
                 if primary and primary.image:
                     image_url = primary.image.url
 
-        if image_url and request:
-            return request.build_absolute_uri(image_url)
-
-        return image_url
+        return _build_absolute_url(request, image_url)
 
     def get_item_url(self, obj):
         if obj.item_type == 'destination' and obj.destination:
@@ -112,7 +129,7 @@ class DestinationReviewSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if obj.user.profile_picture:
             url = obj.user.profile_picture.url
-            return request.build_absolute_uri(url) if request else url
+            return _build_absolute_url(request, url)
         return None
 
     def get_can_delete(self, obj):
@@ -157,7 +174,7 @@ class TourReviewSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if obj.user.profile_picture:
             url = obj.user.profile_picture.url
-            return request.build_absolute_uri(url) if request else url
+            return _build_absolute_url(request, url)
         return None
 
     def get_can_delete(self, obj):

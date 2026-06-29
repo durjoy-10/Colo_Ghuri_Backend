@@ -38,6 +38,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -88,6 +89,21 @@ else:
             'PORT': config('DATABASE_PORT', default='5432'),
         }
     }
+
+
+# Keep Neon/PostgreSQL connections warm and reusable between requests.
+DATABASES['default']['CONN_MAX_AGE'] = 600
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+
+# Lightweight in-memory cache for per-process API/helper caching.
+# It does not require Redis and is safe for Render free/low-tier deployments.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'colo-ghuri-api-cache',
+        'TIMEOUT': 60,
+    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {

@@ -5,8 +5,19 @@ from rest_framework.permissions import BasePermission
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
+from django.db.models import Avg, Count, Exists, FloatField, IntegerField, OuterRef, Prefetch, Subquery, Sum, Value
+from django.db.models.functions import Coalesce
 from .models import Tour, TourImage, TourBooking, TourDestination, FoodPlan
-from .serializers import TourSerializer, TourCreateUpdateSerializer, TourImageSerializer, TourBookingSerializer, TourDestinationSerializer, FoodPlanSerializer
+from destinations.models import DestinationImage
+from .serializers import (
+    TourSerializer,
+    TourListSerializer,
+    TourCreateUpdateSerializer,
+    TourImageSerializer,
+    TourBookingSerializer,
+    TourDestinationSerializer,
+    FoodPlanSerializer,
+)
 from decimal import Decimal
 from operations.utils import (
     log_activity,
@@ -15,6 +26,89 @@ from operations.utils import (
     send_tour_completed_email,
 )
 from operations.models import GuideAvailability
+
+
+def _tour_image_queryset():
+    return TourImage.objects.only(
+        'image_id',
+        'tour_id',
+        'image',
+        'caption',
+        'is_primary',
+        'order',
+    ).order_by('order')
+
+
+def _optimized_tour_queryset(request=None):
+    """Shared queryset for fast tour cards and nested booking tour details."""
+    from engagement.models import TourReview, WishlistItem
+
+    booked_subquery = TourBooking.objects.filter(
+        tour_id=OuterRef('pk'),
+        status__in=['confirmed', 'completed'],
+    ).values('tour_id').annotate(
+        total=Sum('number_of_travellers')
+    ).values('total')[:1]
+
+    review_count_subquery = TourReview.objects.filter(
+        tour_id=OuterRef('pk')
+    ).values('tour_id').annotate(
+        total=Count('pk')
+    ).values('total')[:1]
+
+    rating_average_subquery = TourReview.objects.filter(
+        tour_id=OuterRef('pk')
+    ).values('tour_id').annotate(
+        avg=Avg('rating')
+    ).values('avg')[:1]
+
+    queryset = Tour.objects.select_related('guide_group').prefetch_related(
+        Prefetch('images', queryset=_tour_image_queryset(), to_attr='prefetched_images')
+    ).annotate(
+        booked_seats_value=Coalesce(
+            Subquery(booked_subquery, output_field=IntegerField()),
+            Value(0),
+        ),
+        review_count_value=Coalesce(
+            Subquery(review_count_subquery, output_field=IntegerField()),
+            Value(0),
+        ),
+        rating_average_value=Coalesce(
+            Subquery(rating_average_subquery, output_field=FloatField()),
+            Value(0.0),
+        ),
+    )
+
+    if request is not None and request.user.is_authenticated:
+        wishlist_subquery = WishlistItem.objects.filter(
+            user=request.user,
+            item_type='tour',
+            tour_id=OuterRef('pk'),
+        )
+        queryset = queryset.annotate(is_wishlisted_value=Exists(wishlist_subquery))
+
+    return queryset
+
+
+def _optimized_tour_detail_queryset(request=None):
+    from guides.models import Guide
+
+    destination_queryset = TourDestination.objects.select_related('destination').prefetch_related(
+        'food_plans',
+        Prefetch('destination__images', queryset=DestinationImage.objects.only(
+            'id',
+            'destination_id',
+            'image',
+            'caption',
+            'is_primary',
+            'order',
+        ).order_by('order'), to_attr='prefetched_images'),
+    ).order_by('order')
+
+    return _optimized_tour_queryset(request).prefetch_related(
+        Prefetch('destinations', queryset=destination_queryset),
+        Prefetch('guide_group__guides', queryset=Guide.objects.all().order_by('guide_id'), to_attr='prefetched_guides'),
+    )
 
 
 class IsGuideOrAdmin(BasePermission):
@@ -31,7 +125,7 @@ class IsGuideVerified(BasePermission):
 
 
 class TourListView(generics.ListAPIView):
-    serializer_class = TourSerializer
+    serializer_class = TourListSerializer
     permission_classes = (permissions.AllowAny,)
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = [
@@ -44,12 +138,7 @@ class TourListView(generics.ListAPIView):
     ordering_fields = ['price_per_person', 'created_at', 'total_seats', 'available_seats']
 
     def get_queryset(self):
-        queryset = Tour.objects.select_related('guide_group').prefetch_related(
-            'images',
-            'destinations',
-            'destinations__destination',
-            'destinations__food_plans'
-        )
+        queryset = _optimized_tour_queryset(self.request)
 
         if not self.request.user.is_authenticated:
             queryset = queryset.filter(status='upcoming')
@@ -119,11 +208,14 @@ class TourListView(generics.ListAPIView):
 
         return queryset.distinct()
 
+
 class TourDetailView(generics.RetrieveAPIView):
-    queryset = Tour.objects.all()
     serializer_class = TourSerializer
     permission_classes = (permissions.AllowAny,)
     lookup_field = 'tour_id'
+
+    def get_queryset(self):
+        return _optimized_tour_detail_queryset(self.request)
 
 
 class TourCreateView(generics.CreateAPIView):
@@ -699,20 +791,23 @@ class BookingCreateView(generics.CreateAPIView):
 class MyBookingsView(generics.ListAPIView):
     serializer_class = TourBookingSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    
+
     def get_queryset(self):
         user = self.request.user
-        
+        tour_prefetch = Prefetch('tour', queryset=_optimized_tour_queryset(self.request))
+        base_queryset = TourBooking.objects.select_related('traveller').prefetch_related(tour_prefetch).order_by('-booking_date')
+
         if user.role == 'traveller':
-            return TourBooking.objects.filter(traveller=user)
-        elif user.role == 'guide':
+            return base_queryset.filter(traveller=user)
+
+        if user.role == 'guide':
             from guides.models import Guide
             try:
                 guide = Guide.objects.get(user=user)
-                return TourBooking.objects.filter(tour__guide_group=guide.guide_group)
+                return base_queryset.filter(tour__guide_group=guide.guide_group)
             except Guide.DoesNotExist:
                 return TourBooking.objects.none()
-        
+
         return TourBooking.objects.none()
 
 
@@ -724,7 +819,7 @@ class TourDestinationListView(generics.ListAPIView):
     
     def get_queryset(self):
         tour_id = self.kwargs.get('tour_id')
-        return TourDestination.objects.filter(tour_id=tour_id)
+        return TourDestination.objects.filter(tour_id=tour_id).select_related('destination').prefetch_related('food_plans')
 
 
 class TourDestinationCreateView(generics.CreateAPIView):
